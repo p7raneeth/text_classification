@@ -1,22 +1,23 @@
 # import tensorflow
+import os
+import string
 from distutils import extension
+from io import StringIO
+import contractions as ct
+import eli5
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import cross_validate, StratifiedKFold, train_test_split
+import seaborn as sns
+from fastapi import *
 from sklearn.feature_extraction import *
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import (StratifiedKFold, cross_validate, train_test_split)
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-import seaborn as sns
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-import eli5
-from fastapi import *
 from data import read_validate_data
-import os
-from io import StringIO
-import string
-import contractions as ct
+from cleaning import *
 
 app_nlp = FastAPI()
 global_vars = {}
@@ -64,7 +65,10 @@ def data_understanding() -> dict:
     print(global_vars)
     data_properties['category_count'] = dict(global_vars['data'][global_vars['target']].value_counts())
     # data_properties['null_count'] = null count logic to be added
-
+    # average number of words per sentence
+    # longest sentence length
+    # shortest sentence length
+    # most common words in the whole corpus
     print('*************')
     print(data_properties)
     return {f'{data_properties}'}
@@ -77,12 +81,17 @@ async def data_clean():
     global_vars['data']['review'] = global_vars['data']['review'].apply(lambda x: x.replace('\n', ''))
     global_vars['data']['review'] = global_vars['data']['review'].apply(lambda x: ct.fix(x))
     # whitespace removal
+    global_vars['data']['review'] = global_vars['data']['review'].apply(lambda x: " ".join(x.split()))
     # hashtag removal
+    # global_vars['data']['review'] = global_vars['data']['review'].apply(lambda x: " ".join(x.split()))
     # eliminate URLs and links
     # stopwords removal
+    global_vars['data']['cleaned_review'] = global_vars['data']['review'].apply(lambda x : ' '.join(stopwordremoval(x, stop_words)))
+    # remove numbers 
+    # remove junk characters
     # stemming
     # lemmatization
-    print(global_vars['data']['review'][0])
+    print(global_vars['data']['cleaned_review'][0])
 
     return {'message': 'cleaning completed successfully'}
 
