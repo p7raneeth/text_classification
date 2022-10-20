@@ -18,6 +18,8 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from data import read_validate_data
 from cleaning import *
+import re
+
 
 app_nlp = FastAPI()
 global_vars = {}
@@ -81,16 +83,19 @@ async def data_clean():
     global_vars['data']['review'] = global_vars['data']['review'].apply(lambda x: x.replace('\n', ''))
     global_vars['data']['review'] = global_vars['data']['review'].apply(lambda x: ct.fix(x))
     # whitespace removal
-    global_vars['data']['review'] = global_vars['data']['review'].apply(lambda x: " ".join(x.split()))
     # hashtag removal
     # global_vars['data']['review'] = global_vars['data']['review'].apply(lambda x: " ".join(x.split()))
     # eliminate URLs and links
     # stopwords removal
     global_vars['data']['cleaned_review'] = global_vars['data']['review'].apply(lambda x : ' '.join(stopwordremoval(x, stop_words)))
-    # remove numbers 
-    # remove junk characters
+    # remove numbers and junk characters
+    global_vars['data']['cleaned_review'] = global_vars['data']['cleaned_review'].apply(lambda x : re.sub(r'[^a-zA-Z ]+', '', x))
     # stemming
+
     # lemmatization
+
+
+    global_vars['data']['cleaned_review'] = global_vars['data']['cleaned_review'].apply(lambda x: " ".join(x.split()))
     print(global_vars['data']['cleaned_review'][0])
 
     return {'message': 'cleaning completed successfully'}
