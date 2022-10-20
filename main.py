@@ -18,7 +18,9 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from data import read_validate_data
 from cleaning import *
+from preprocessing import *
 import re
+from modelling import *
 
 
 app_nlp = FastAPI()
@@ -35,7 +37,7 @@ async def sanity_check():
 
 
 @app_nlp.post('/data_validation')
-def data_validation(fname: UploadFile=File(None)):
+def data_validation(fname: UploadFile=File('IMDB Dataset.csv')):
     global_vars['fname'] = fname
     extension = fname.filename.split('.')[-1]
     flag, df = read_validate_data(fname, extension)
@@ -51,6 +53,10 @@ def data_preview(num_records:int):
     # print(global_vars['data'].head(num_records))
     columns =  global_vars['data'].columns
     features, global_vars['target'] = columns[:-1], columns[-1]
+    print('****************************************************************')
+    print(global_vars['target'])
+    print(global_vars['data']['sentiment'])
+    print('****************************************************************')
     percent_num_vals = round(global_vars['data'].isnull().sum()/ global_vars['data'].shape[0],5)*100
     return {f" features : {features} -- columns : {columns} -- percent_num_vals: {percent_num_vals} -- head : { global_vars['data'].head(num_records) }"}
 
@@ -93,14 +99,54 @@ async def data_clean():
     # stemming
 
     # lemmatization
-
-
     global_vars['data']['cleaned_review'] = global_vars['data']['cleaned_review'].apply(lambda x: " ".join(x.split()))
     print(global_vars['data']['cleaned_review'][0])
 
     return {'message': 'cleaning completed successfully'}
 
 
-@app_nlp.get('/data_vectorization')
-async def data_classification():
-    pass
+@app_nlp.get('/pre_processing')
+async def pre_processing(select_vectorizer: int, split_percent:float = 0.25):
+    # seperate X and y
+    training_data, training_labels = global_vars['data']['cleaned_review'], global_vars['data']['sentiment']
+    print('******************************************************')
+    print(global_vars['data']['cleaned_review'][0:5])
+    print(type(training_data))
+    print(len(training_data))
+    print(len(training_labels))
+    print(training_labels)
+    print('***********************************************')
+    # print(training_data.shape[0], training_labels.shape[0])
+    # train test split
+    trainX, trainY, testX, testY = train_test_split(training_data, training_labels, test_size=split_percent)
+    # perform TFIDF Vectorization
+    if select_vectorizer == 1:
+        # TFIDF
+        pass
+    elif select_vectorizer == 2:
+        # perform Word2Vec Vectorization
+        X_train_vect_avg, X_test_vect_avg = Word2Vectorizer(trainX, trainY, testX, testY)
+        global_vars['avg_w2v_vectors'] = [X_train_vect_avg, X_test_vect_avg]
+        return {'message': 'Vectorization completed successfully'}
+    elif select_vectorizer == 3:
+        # perform Word2Vec Vectorization
+        pass
+    else:
+        pass
+
+# model_dict = {
+
+#     1 : 'Random Forest Model',
+#     2 : 'Logistic Regression'
+
+# }
+@app_nlp.get('/modelling')
+async def ml_modelling(select_model:int):
+    if select_model == 1:
+        RandomForestModel()
+    elif select_model == 2:
+        LogisticRegression()
+        pass
+    else:
+        someothermodel()
+        pass
