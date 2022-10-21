@@ -11,8 +11,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from fastapi import *
-from sklearn.feature_extraction import *
-from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (StratifiedKFold, cross_validate, train_test_split)
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -30,11 +28,9 @@ validation_dict = {'0': 'Auto and Custom',
                     '1': 'Invalid',
                    '2': 'Custom only'}
 
-
 @app_nlp.get('/')
 async def sanity_check():
     return {'message': 'Hello World!'}
-
 
 @app_nlp.post('/data_validation')
 def data_validation(fname: UploadFile=File('IMDB Dataset.csv')):
@@ -109,15 +105,16 @@ async def data_clean():
 async def pre_processing(select_vectorizer: int, split_percent:float = 0.25):
     # seperate X and y
     training_data, training_labels = global_vars['data']['cleaned_review'], global_vars['data']['sentiment']
-    print('******************************************************')
-    print(global_vars['data']['cleaned_review'][0:5])
-    print(type(training_data))
-    print(len(training_data))
-    print(len(training_labels))
-    print(training_labels)
-    print('***********************************************')
+    # print('******************************************************')
+    # print(global_vars['data']['cleaned_review'][0:5])
+    # print(type(training_data))
+    # print(len(training_data))
+    # print(len(training_labels))
+    # print(training_labels)
+    # print('***********************************************')
     # print(training_data.shape[0], training_labels.shape[0])
     # train test split
+
     trainX, trainY, testX, testY = train_test_split(training_data, training_labels, test_size=split_percent)
     # perform TFIDF Vectorization
     if select_vectorizer == 1:
@@ -126,7 +123,7 @@ async def pre_processing(select_vectorizer: int, split_percent:float = 0.25):
     elif select_vectorizer == 2:
         # perform Word2Vec Vectorization
         X_train_vect_avg, X_test_vect_avg = Word2Vectorizer(trainX, trainY, testX, testY)
-        global_vars['avg_w2v_vectors'] = [X_train_vect_avg, X_test_vect_avg]
+        global_vars['X_train_vect_avg'], global_vars['X_test_vect_avg'] = X_train_vect_avg, X_test_vect_avg
         return {'message': 'Vectorization completed successfully'}
     elif select_vectorizer == 3:
         # perform Word2Vec Vectorization
@@ -143,7 +140,7 @@ async def pre_processing(select_vectorizer: int, split_percent:float = 0.25):
 @app_nlp.get('/modelling')
 async def ml_modelling(select_model:int):
     if select_model == 1:
-        RandomForestModel()
+        LogisticRegression(1, 'lgbs', global_vars['X_train_vect_avg'], global_vars['X_test_vect_avg'])
     elif select_model == 2:
         LogisticRegression()
         pass
