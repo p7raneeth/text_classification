@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from fastapi import *
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (StratifiedKFold, cross_validate, train_test_split)
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -18,7 +19,7 @@ from data import read_validate_data
 from cleaning import *
 from preprocessing import *
 import re
-from modelling import *
+from modelling_metrics import *
 
 
 app_nlp = FastAPI()
@@ -27,6 +28,10 @@ global_vars = {}
 validation_dict = {'0': 'Auto and Custom',
                     '1': 'Invalid',
                    '2': 'Custom only'}
+
+
+
+
 
 @app_nlp.get('/')
 async def sanity_check():
@@ -114,8 +119,7 @@ async def pre_processing(select_vectorizer: int, split_percent:float = 0.25):
     # print('***********************************************')
     # print(training_data.shape[0], training_labels.shape[0])
     # train test split
-
-    trainX, trainY, testX, testY = train_test_split(training_data, training_labels, test_size=split_percent)
+    trainX, testX, trainY, testY = train_test_split(training_data, training_labels, test_size=split_percent)
     # perform TFIDF Vectorization
     if select_vectorizer == 1:
         # TFIDF
@@ -124,6 +128,7 @@ async def pre_processing(select_vectorizer: int, split_percent:float = 0.25):
         # perform Word2Vec Vectorization
         X_train_vect_avg, X_test_vect_avg = Word2Vectorizer(trainX, trainY, testX, testY)
         global_vars['X_train_vect_avg'], global_vars['X_test_vect_avg'] = X_train_vect_avg, X_test_vect_avg
+        global_vars['trainY'], global_vars['testY'] = trainY, testY
         return {'message': 'Vectorization completed successfully'}
     elif select_vectorizer == 3:
         # perform Word2Vec Vectorization
@@ -138,9 +143,12 @@ async def pre_processing(select_vectorizer: int, split_percent:float = 0.25):
 
 # }
 @app_nlp.get('/modelling')
-async def ml_modelling(select_model:int):
+async def ml_modelling(select_model:int, select_metric:str):
+    print(list(global_vars.keys()))
     if select_model == 1:
-        LogisticRegression(1, 'lgbs', global_vars['X_train_vect_avg'], global_vars['X_test_vect_avg'])
+        X_train_predict, X_test_predict, training_labels, testing_labels = LogisticRegressionClassifier( global_vars['X_train_vect_avg'], global_vars['trainY'], global_vars['X_test_vect_avg'], global_vars['testY'])
+        compute_metrics(X_train_predict, X_test_predict, training_labels, testing_labels, select_metric)    
+    
     elif select_model == 2:
         LogisticRegression()
         pass
