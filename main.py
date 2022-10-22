@@ -147,7 +147,7 @@ async def ml_modelling(select_model:int, select_metric:str):
     print(list(global_vars.keys()))
     if select_model == 1:
         X_train_predict, X_test_predict, training_labels, testing_labels = LogisticRegressionClassifier( global_vars['X_train_vect_avg'], global_vars['trainY'], global_vars['X_test_vect_avg'], global_vars['testY'])
-        compute_metrics(X_train_predict, X_test_predict, training_labels, testing_labels, select_metric)    
+        training_score, testing_score = compute_metrics(X_train_predict, X_test_predict, training_labels, testing_labels, select_metric)    
     
     elif select_model == 2:
         LogisticRegression()
