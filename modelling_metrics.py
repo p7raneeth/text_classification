@@ -4,9 +4,11 @@ from sklearn.metrics import *
 import pandas as pd
 import pickle
 
+local_vars = {}
+
 
 def LogisticRegressionClassifier( X_train_text, training_labels, X_test_text, testing_labels):
-    #print(len(X_train_text), len(X_test_text))
+    print(len(X_train_text), len(X_test_text))
     #print(len(training_labels), len(testing_labels))
     training_labels = pd.DataFrame({'values': training_labels})
     testing_labels = pd.DataFrame({'values': testing_labels})
@@ -18,12 +20,13 @@ def LogisticRegressionClassifier( X_train_text, training_labels, X_test_text, te
     filename = 'finalized_model.pkl'
     pickle.dump(logreg, open(filename, 'wb'))
     X_train_predict = logreg.predict(X_train_text)
-    print('--------------------------------')
-    print(type(X_test_text))
-    print(len(X_test_text))
-    print('--------------------------------')
+    local_vars['trained_model'] = logreg
+    print(X_test_text[0])
     X_test_predict = logreg.predict(X_test_text)
-    #print(X_train_predict[:5])
+    print('-------        testing     -------------')
+    # trained_model_predictions =  local_vars['trained_model'].predict("Awesome movie")
+    # print()
+
     return X_train_predict, X_test_predict, training_labels, testing_labels
 
 def compute_metrics(X_train_predict, X_test_predict, trainY, testY, metrics):

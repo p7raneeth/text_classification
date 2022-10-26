@@ -33,7 +33,7 @@ validation_dict = {'0': 'Auto and Custom',
 @app_nlp.get('/')
 async def sanity_check():
     pickle.load(open('finalized_model.pkl', 'rb'))
-    return {'message': 'Hello World!'}
+    return {'message': 'Hello World new!'}
 
 @app_nlp.post('/data_validation')
 def data_validation(fname: UploadFile=File('IMDB Dataset.csv')):
@@ -134,7 +134,7 @@ async def pre_processing(select_vectorizer: int = 2, split_percent:float = 0.25)
 
 # }
 @app_nlp.get('/modelling')
-async def ml_modelling(select_model:int, select_metric:str):
+async def ml_modelling(select_model:int = 1, select_metric:str = 'acc'):
     global_vars['model_selection'] = select_model
     if select_model == 1:
         X_train_predict, X_test_predict, training_labels, testing_labels = LogisticRegressionClassifier( global_vars['X_train_vect_avg'], global_vars['trainY'], global_vars['X_test_vect_avg'], global_vars['testY'])
@@ -148,26 +148,30 @@ async def ml_modelling(select_model:int, select_metric:str):
         pass
 
 @app_nlp.post('/inference')
-async def ml_inference(filename:str, X_inference:list):
+async def ml_inference():
     #print('****************************************')
     #print(X_inference)
     #print(type(X_inference))
     #print(global_vars['data_vectorizer'])
     #print(type(global_vars['data_vectorizer']))
     #print('--------------------------------------')
+    X_inference =  ['terrible movie']
     cleaned_data = inf_clean(X_inference)
     
     if global_vars['data_vectorizer'] == 1:
         pass
     elif global_vars['data_vectorizer'] == 2:
         #print('************* data_vectorizer 2 ****************************')
-        X_inf_vect = inf_word2vec(X_inference)
+        X_inf_vect = inf_word2vec(cleaned_data)
         print(type(X_inf_vect)) #list
         print(len(X_inf_vect))
-        print(X_inf_vect)
-        loaded_model = pickle.load(open('finalized_model.pkl', 'rb'))
-        print('------loaded model type ----------------', type(loaded_model))
-        inf_predictions =  loaded_model.predict(X_inf_vect)
+        print(X_inf_vect[0])
+        print(local_vars)
+        # loaded_model = pickle.load(open('finalized_model.pkl', 'rb'))
+        inf_predictions = local_vars['trained_model'].predict(X_inf_vect)
+        # loaded_model = pickle.load(open('finalized_model.pkl', 'rb'))
+        # print('------loaded model type ----------------', type(loaded_model))
+        # inf_predictions =  loaded_model.predict(X_inf_vect)
         #print(inf_predictions)
         return inf_predictions
         
